@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Проверка ответов</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 720px; margin: 32px auto; padding: 0 16px; color: #111; }
+    input[type="text"] { width: 100%; padding:8px; font-size:16px; box-sizing:border-box; }
+    button { margin-top:12px; padding:10px 16px; font-size:16px; cursor:pointer; }
+    .msg { margin-top:12px; font-weight:700; }
+    .msg.error { color:#c00; }
+    .msg.ok { color:#0a0; }
+    ul.status { margin-top:16px; padding-left:20px; }
+    ul.status li { margin:4px 0; }
+    .correct { color: #0a0; font-weight:600; }
+    .wrong { color: #c00; font-weight:600; }
+    #secretLink { display:none; margin-top:16px; padding:10px 14px; background:#0a74da; color:#fff; text-decoration:none; border-radius:6px; display:inline-block; }
+  </style>
+</head>
+<body>
+  <h1>Введите ответы</h1>
+
+  <p><strong>Вопрос <span id="currentNum">1</span> из 15</strong></p>
+  <input id="answer" type="text" autocomplete="off" placeholder="Введите ответ..." />
+  <button id="submitBtn">Ответить</button>
+
+  <div id="message" class="msg" aria-live="polite"></div>
+
+  <a id="secretLink" href="https://youtu.be/s4XYTVZDzDE" target="_blank" rel="noopener">Перейти по секретной ссылке</a>
+
+  <h3>Статус ответов</h3>
+  <ul id="statusList" class="status"></ul>
+
+  <script>
+    const correctAnswers = [
+      "Пядь",
+      "23",
+      "Куценко",
+      "46",
+      "Медынь",
+      "Передовой",
+      "Победа",
+      "10409000",
+      "Лётчик-истребитель",
+      "Африка",
+      "1287600",
+      "165",
+      "41",
+      "Югославия",
+      "Троян"
+    ];
+
+    function normalizeForCompare(s){
+      if (!s) return "";
+      s = String(s).replace(/\uFEFF/g,'').normalize('NFC');
+      s = s.replace(/[\u2010-\u2015–—]/g, "-");
+      s = s.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+      return s;
+    }
+    function digitsOnly(s){ return String(s).replace(/\D+/g, ""); }
+
+    const normalizedCorrect = correctAnswers.map(a => normalizeForCompare(a));
+
+    const state = new Array(correctAnswers.length).fill(null);
+    let currentIndex = 0;
+
+    const statusList = document.getElementById('statusList');
+    function renderStatusList(){
+      statusList.innerHTML = "";
+      for (let i=0;i<correctAnswers.length;i++){
+        const li = document.createElement('li');
+        if (state[i] === true){
+          li.innerHTML = `${i+1}. <span class="correct">Верно</span>`;
+        } else if (state[i] === false){
+          li.innerHTML = `${i+1}. <span class="wrong">Неверно</span>`;
+        } else {
+          li.innerHTML = `${i+1}. —`;
+        }
+        statusList.appendChild(li);
+      }
+    }
+    renderStatusList();
+
+    const answerEl = document.getElementById('answer');
+    const submitBtn = document.getElementById('submitBtn');
+    const messageEl = document.getElementById('message');
+    const secretLink = document.getElementById('secretLink');
+    const currentNumEl = document.getElementById('currentNum');
+
+    function showMessage(text, type){
+      messageEl.textContent = text;
+      messageEl.className = 'msg ' + (type === 'ok' ? 'ok' : 'error');
+    }
+
+    function checkAllCorrect(){ return state.every(v => v === true); }
+
+    function handleSubmit(){
+      if (currentIndex >= correctAnswers.length) return;
+
+      const userRaw = answerEl.value;
+      if (!userRaw.trim()){
+        showMessage("Введите ответ.", "error");
+        return;
+      }
+
+      const userNorm = normalizeForCompare(userRaw);
+      const correctNorm = normalizedCorrect[currentIndex];
+      const correctDigits = digitsOnly(correctAnswers[currentIndex]);
+
+      let matched = false;
+      if (correctDigits.length > 0 && digitsOnly(userRaw).length > 0){
+        matched = digitsOnly(userRaw) === correctDigits;
+      } else {
+        matched = userNorm === correctNorm;
+      }
+
+      if (matched){
+        state[currentIndex] = true;
+        showMessage("Верно! Введите следующий ответ.", "ok");
+        currentIndex++;
+        if (currentIndex < correctAnswers.length){
+          currentNumEl.textContent = currentIndex+1;
+        }
+      } else {
+        state[currentIndex] = false;
+        showMessage("Ответ неверный. Попробуйте ещё раз.", "error");
+      }
+
+      renderStatusList();
+      answerEl.value = "";
+      answerEl.focus();
+
+      if (checkAllCorrect()){
+        secretLink.style.display = "inline-block";
+        showMessage("Поздравляем! Все ответы верны — ссылка доступна.", "ok");
+      }
+    }
+
+    submitBtn.addEventListener('click', handleSubmit);
+    answerEl.addEventListener('keydown', e => { if (e.key==="Enter") handleSubmit(); });
+  </script>
+</body>
+</html>
