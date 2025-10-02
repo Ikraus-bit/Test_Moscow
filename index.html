@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Проверка ответов</title>
+  <title>Введите ответы</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 720px; margin: 32px auto; padding: 0 16px; color: #111; }
     input[type="text"] { width: 100%; padding:8px; font-size:16px; box-sizing:border-box; }
@@ -15,11 +15,11 @@
     ul.status li { margin:4px 0; }
     .correct { color: #0a0; font-weight:600; }
     .wrong { color: #c00; font-weight:600; }
-    #secretLink { display:none; margin-top:16px; padding:10px 14px; background:#0a74da; color:#fff; text-decoration:none; border-radius:6px; display:inline-block; }
+    .secret-link { margin-top:16px; padding:10px 14px; background:#0a74da; color:#fff; text-decoration:none; border-radius:6px; display:inline-block; }
   </style>
 </head>
 <body>
-  <h1>Введите ответы</h1>
+  <h1>Проверка ответов</h1>
 
   <p><strong>Вопрос <span id="currentNum">1</span> из 15</strong></p>
   <input id="answer" type="text" autocomplete="off" placeholder="Введите ответ..." />
@@ -27,7 +27,8 @@
 
   <div id="message" class="msg" aria-live="polite"></div>
 
-  <a id="secretLink" href="https://youtu.be/s4XYTVZDzDE" target="_blank" rel="noopener">Перейти по секретной ссылке</a>
+  <!-- Сюда добавим ссылку, когда все ответы будут верны -->
+  <div id="linkContainer"></div>
 
   <h3>Статус ответов</h3>
   <ul id="statusList" class="status"></ul>
@@ -85,8 +86,8 @@
     const answerEl = document.getElementById('answer');
     const submitBtn = document.getElementById('submitBtn');
     const messageEl = document.getElementById('message');
-    const secretLink = document.getElementById('secretLink');
     const currentNumEl = document.getElementById('currentNum');
+    const linkContainer = document.getElementById('linkContainer');
 
     function showMessage(text, type){
       messageEl.textContent = text;
@@ -94,6 +95,17 @@
     }
 
     function checkAllCorrect(){ return state.every(v => v === true); }
+
+    function showSecretLink() {
+      if (linkContainer.firstChild) return; // чтобы не создавать повторно
+      const link = document.createElement("a");
+      link.href = "https://example.com/secret"; // <-- замените на вашу ссылку
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "Перейти по секретной ссылке";
+      link.className = "secret-link";
+      linkContainer.appendChild(link);
+    }
 
     function handleSubmit(){
       if (currentIndex >= correctAnswers.length) return;
@@ -132,7 +144,7 @@
       answerEl.focus();
 
       if (checkAllCorrect()){
-        secretLink.style.display = "inline-block";
+        showSecretLink();
         showMessage("Поздравляем! Все ответы верны — ссылка доступна.", "ok");
       }
     }
